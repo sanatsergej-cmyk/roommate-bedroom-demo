@@ -145,7 +145,7 @@ function shell(scene, furnishings, edges, settings, textures) {
   const floorKey = settings.finishes.floor;
   const map = textures[floorKey === 'smoked' ? 'walnut' : floorKey];
   const floorColor = map ? (floorKey === 'smoked' ? '#aa9683' : '#ffffff') : floorBases[floorKey];
-  const floor = material(floorColor, { map });
+  const floor = material(floorColor, { map: map ?? null });
   const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), floor);
   floorMesh.rotation.x = -Math.PI / 2;
   floorMesh.receiveShadow = true;
