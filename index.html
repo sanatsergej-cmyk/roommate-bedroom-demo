@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RoomMate · Спальня</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+      color: #24231e;
+      background: #f8f6f0;
+      --paper: #fffdf9;
+      --line: #e4ded3;
+      --muted: #625e54;
+      --accent: #a04b34;
+      --green: #365c45;
+      --bad: #942e28;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body, h1, h2, h3, p, figure { margin: 0; }
+    button, a { font: inherit; }
+    button { cursor: pointer; color: inherit; }
+    button:disabled { cursor: default; }
+    [hidden] { display: none !important; }
+    button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+    a { color: inherit; text-underline-offset: 4px; }
+    .shell { width: min(100% - 80px, 1392px); margin-inline: auto; }
+    .topbar { border-bottom: 1px solid var(--line); }
+    .topbar .shell { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 67px; }
+    .brand { display: inline-flex; gap: 9px; align-items: center; font: 500 26px/1 Georgia, serif; letter-spacing: -.065em; }
+    .brand-mark { display: flex; width: 18px; height: 18px; border: 1px solid var(--accent); transform: rotate(45deg); border-radius: 3px; align-items: center; justify-content: center; }
+    .brand-mark::after { content: ""; height: 1px; width: 8px; background: var(--accent); }
+    .project-label { color: var(--muted); font-size: 13px; }
+    main { padding-block: 38px 60px; }
+    .intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+    h1 { font: 400 clamp(46px, 5.5vw, 76px)/.97 Georgia, serif; letter-spacing: -.07em; }
+    .room-details { color: var(--muted); font-size: 14px; margin-top: 13px; }
+    .scene-switch { display: inline-flex; padding: 4px; gap: 3px; border-radius: 7px; background: #ebe6dc; flex: none; }
+    .scene-switch button { border: 1px solid transparent; border-radius: 5px; background: transparent; padding: 8px 14px; color: var(--muted); font-size: 13px; font-weight: 550; }
+    .scene-switch button[aria-pressed=true] { border-color: #e4dcd0; background: var(--paper); color: #24231e; box-shadow: 0 1px 2px #31291312; }
+    .scene-switch { flex-wrap: wrap; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(340px, 1fr); gap: clamp(20px, 2.6vw, 39px); align-items: start; }
+    .scene { position: relative; overflow: hidden; isolation: isolate; aspect-ratio: 3 / 2; border-radius: 8px; background: #c4b39e; }
+    .scene img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .marker { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 7px; min-height: 39px; padding: 5px 11px 5px 6px; border: 1px solid #fff9; border-radius: 40px; background: #fffcf0ee; color: #2e241d; box-shadow: 0 3px 15px #2420173d; font-size: 13px; font-weight: 650; }
+    .marker > span { width: 25px; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: #dfd7c7; font-weight: 400; font-size: 18px; line-height: 1; }
+    .marker[aria-pressed=true] { color: #fff9ef; background: #302820; border-color: #fffaf0cc; }
+    .marker[aria-pressed=true] > span { color: white; background: var(--accent); }
+    .marker-bed { left: 48%; top: 62%; }
+    .marker-table { left: 85%; top: 65%; }
+    figcaption { margin-top: 12px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .plan-panel { display: grid; place-items: center; border-radius: 8px; padding: 7px 0; background: #ded4c3; }
+    .plan-room { position: relative; width: min(100%, 478px); }
+    .plan-architecture { display: block; width: 100%; height: auto; mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent), linear-gradient(transparent, #000 4%, #000 99%, transparent); mask-composite: intersect; }
+    .architecture-finish { position: absolute; inset: 0; display: none; width: 100%; height: 100%; pointer-events: none; }
+    /* These masks follow the walls and joinery in the room image. */
+    .wall-left { clip-path: polygon(6.65% 5%, 18.7% 5%, 20% 11.45%, 11.7% 11.45%, 11.7% 84.65%, 19.3% 84.65%, 18.7% 88.7%, 6.65% 88.7%); }
+    .wall-right { clip-path: polygon(59.4% 5%, 93.2% 5%, 93.2% 88.7%, 38.3% 88.7%, 37.8% 84.65%, 87.9% 84.65%, 87.9% 11.45%, 58.4% 11.45%); }
+    .window-finish { clip-path: polygon(evenodd, 18.8% 5.15%, 21% 5.15%, 21% 6.2%, 38.1% 6.2%, 38.1% 9.15%, 21.5% 9.15%, 21% 6.2%, 21% 5.15%, 40.3% 5.15%, 40.3% 6.2%, 57.4% 6.2%, 56.9% 9.15%, 40.2% 9.15%, 40.3% 6.2%, 40.3% 5.15%, 59.4% 5.15%, 58.5% 10.6%, 20.1% 10.6%); }
+    .door-finish { clip-path: polygon(19.3% 84.65%, 37.8% 84.65%, 38.1% 88.1%, 21.1% 88.1%, 25.7% 92.1%, 25.7% 98.55%, 24.8% 98.55%, 24.4% 93.2%, 18.7% 88.8%); }
+    .plan-room[data-walls]:not([data-walls=lime]) .wall-finish,
+    .plan-room[data-window]:not([data-window=oak]) .window-finish,
+    .plan-room[data-door]:not([data-door=oak]) .door-finish { display: block; }
+    .plan-room[data-walls=chalk] .wall-finish { filter: saturate(.22) brightness(1.14); }
+    .plan-room[data-walls=sage] .wall-finish { filter: saturate(.65) sepia(.29) hue-rotate(29deg) brightness(.86); }
+    .plan-room[data-window=chalk] .window-finish, .plan-room[data-door=chalk] .door-finish { filter: grayscale(.87) brightness(1.35); }
+    .plan-room[data-window=graphite] .window-finish { filter: grayscale(.9) brightness(.58); }
+    .plan-room[data-door=walnut] .door-finish { filter: saturate(.85) brightness(.72); }
+    /* Match the measured floor area inside the rendered walls. */
+    .plan { position: absolute; left: 11.7%; top: 11.45%; width: 76.2%; aspect-ratio: 340 / 410; isolation: isolate; overflow: hidden; }
+    .floor-finish { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
+    .plan-room[data-floor=smoked] .floor-finish { filter: saturate(.72) brightness(.66); }
+    .plan-rug { position: absolute; display: block; pointer-events: none; left: 27%; top: 30%; width: 64%; height: 43%; filter: drop-shadow(1px 2px 2px #33211766); }
+    .plan-room[data-rug=grey] .plan-rug { filter: saturate(.05) brightness(.92) drop-shadow(1px 2px 2px #33211766); }
+    .piece { position: absolute; z-index: 1; border: 0; background: transparent; padding: 0; }
+    .piece img { display: block; width: 100%; height: 100%; filter: var(--surface-filter) drop-shadow(2px 4px 4px #24170fa3); }
+    .piece-pin { position: absolute; width: 26px; height: 26px; top: 50%; left: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; border: 1px solid #fff9; border-radius: 50%; background: #fffaf0f0; color: #302820; box-shadow: 0 2px 8px #24170f66; font-size: 17px; line-height: 1; }
+    .piece[aria-pressed=true] .piece-pin, .piece:hover .piece-pin { background: #302820; color: #fffaf0; }
+    .piece:focus-visible { outline: 2px solid #fffaf0; outline-offset: -2px; }
+    .table::before { content: ""; position: absolute; inset: 0 -5px -22px; }
+    .table .piece-pin { top: calc(100% + 3px); }
+    .plan-chair { rotate: 22deg; }
+    .plan-tv .piece-pin { top: auto; bottom: 9px; transform: translateX(-50%); }
+    .plan-lamp .piece-pin { top: calc(100% + 5px); }
+    .plan-room[data-light-on=true] .plan-lamp img { filter: var(--surface-filter) drop-shadow(0 0 7px #ffe1a7) drop-shadow(2px 3px 4px #31231999); }
+    .table.is-over img { outline: 2px solid var(--bad); outline-offset: -2px; }
+    .table.is-over::after { content: ""; position: absolute; inset: 0 var(--wall-overlap) 0 auto; width: 2px; background: #d34e41; }
+    .table.is-over .piece-pin { background: var(--bad); color: white; }
+    .plan-caption { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px 18px; }
+    .plan-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .plan-caption button { padding: 3px 8px; margin-top: -3px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--muted); }
+    .plan-caption button[aria-pressed=true] { background: #302820; color: white; border-color: #302820; }
+    .piece-size { display: none; position: absolute; inset: 0; border: 1px solid #fffcf1; box-shadow: 0 0 0 1px #30282080; pointer-events: none; }
+    .piece-size::after { content: attr(data-size); position: absolute; left: 50%; top: calc(100% + 8px); transform: translateX(-50%); border-radius: 4px; padding: 2px 5px; color: #fffaf1; background: #302820; font: 600 11px/1.4 Inter, Arial, sans-serif; white-space: nowrap; }
+    .table .piece-size::after { left: auto; right: var(--wall-overlap, 0px); top: auto; bottom: calc(100% + 6px); transform: none; }
+    .table.is-over .piece-size { border-color: #e86c60; }
+    .plan[data-measurements=true] .piece[aria-pressed=true] .piece-size { display: block; }
+    .plan-tv .piece-size::after { bottom: calc(100% + 35px); top: auto; }
+    .plan-lamp .piece-size::after { top: calc(100% + 23px); }
+    .scene-3d { position: relative; height: clamp(330px, 47vw, 585px); border-radius: 8px; overflow: hidden; background: #e5dbcb; }
+    .scene-3d canvas { display: block; cursor: grab; }
+    .scene-3d canvas:active { cursor: grabbing; }
+    .scene-3d-status { position: absolute; inset: 45% 20px auto; text-align: center; color: var(--muted); font-size: 13px; }
+    .orbit-controls { position: absolute; inset: auto 10px 10px; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; pointer-events: none; }
+    .orbit-controls button { pointer-events: auto; min-width: 40px; min-height: 34px; border: 1px solid #a58c753b; border-radius: 5px; padding: 4px 9px; background: #fffaf2ed; font-size: 12px; font-weight: 600; box-shadow: 0 1px 8px #4d382222; }
+    .orbit-controls button[aria-pressed=true] { background: #302820; color: #fffaf2; }
+    .panel { padding: 0 0 0 clamp(0px, .25vw, 4px); }
+    .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+    .editor-switch { display: flex; gap: 3px; padding: 3px; border-radius: 5px; margin: 12px 0 13px; background: #ebe6dc; }
+    .editor-switch button { flex: 1; border: 1px solid transparent; border-radius: 4px; padding: 7px 12px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .editor-switch button[aria-pressed=true] { border-color: #e4dcd0; background: var(--paper); color: #24231e; }
+    .finish-tabs { gap: clamp(7px, 1.3vw, 19px); flex-wrap: wrap; }
+    .finish-option { display: flex; align-items: center; gap: 10px; min-height: 48px; width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); font-size: 13px; text-align: left; }
+    .finish-option[aria-pressed=true] { border-color: #ab7564; background: #f9efe8; font-weight: 650; }
+    .finish-swatch { flex: 0 0 36px; height: 30px; background-size: cover; background-position: center; border: 1px solid #30282020; border-radius: 3px; }
+    .finish-selection { margin: 18px 0 10px; font-size: 12px; }
+    .finish-selection div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+    .finish-selection dt { color: var(--muted); }
+    .finish-selection dd { margin: 0; text-align: right; }
+    .reset-finishes { border: 0; background: transparent; padding: 5px 0; text-decoration: underline; text-underline-offset: 3px; font-size: 12px; color: var(--muted); }
+    .reset-finishes:disabled { opacity: .53; }
+    h2 { font: 400 clamp(26px, 2.6vw, 37px)/1.1 Georgia, serif; letter-spacing: -.04em; }
+    h3 { font-size: 14px; font-weight: 650; }
+    .summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin: 15px 0 18px; }
+    .summary strong { display: block; font-size: 28px; line-height: 1.17; font-weight: 600; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+    .summary span { color: var(--muted); font-size: 12px; }
+    .summary p { font-size: 12px; padding-bottom: 3px; text-align: right; }
+    .warning { color: var(--bad); }
+    .ok { color: var(--green); }
+    .tabs { display: flex; align-items: end; gap: 19px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+    .tabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 8px 0 9px; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .tabs button[aria-pressed=true] { border-bottom-color: var(--accent); color: #24231e; }
+    .item-tabs { column-gap: 14px; row-gap: 0; flex-wrap: wrap; }
+    .options { display: grid; gap: 6px; }
+    .option { display: grid; grid-template-columns: 15px minmax(0, 1fr) auto; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); padding: 10px; text-align: left; }
+    .option::before { content: ""; width: 12px; height: 12px; border: 1px solid #a19a8f; border-radius: 50%; }
+    .option[aria-pressed=true] { border-color: #ab7564; background: #f9efe8; }
+    .option[aria-pressed=true]::before { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 2px #f9efe8; }
+    .option b { font-size: 13px; font-weight: 650; }
+    .option small, .line small { display: block; color: var(--muted); font-size: 11px; line-height: 1.45; margin-top: 2px; }
+    .option > span:last-child, .line strong { white-space: nowrap; font-size: 13px; font-weight: 620; }
+    .checks { margin: 10px 0 18px; font-size: 12px; line-height: 1.52; color: var(--muted); }
+    .spec { list-style: none; padding: 0; margin: 7px 0 0; }
+    .line { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; align-items: baseline; border-top: 1px solid var(--line); padding: 9px 0; font-size: 13px; }
+    .line a { text-decoration-color: #aaa296; text-decoration-thickness: 1px; }
+    .line a:hover { color: var(--accent); text-decoration-color: currentColor; }
+    .actions { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0 9px; }
+    .actions button { flex: 1 1 max-content; border: 1px solid #b5aa9a; border-radius: 4px; padding: 11px 12px; background: transparent; font-size: 12px; font-weight: 650; }
+    .actions .primary { color: #fffcf3; background: #302820; border-color: #302820; }
+    .actions button:disabled { opacity: .49; }
+    .note { font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .note + .note { margin-top: 4px; }
+    @media (max-width: 900px) { .shell { width: calc(100% - 44px); } .workspace { gap: 18px; grid-template-columns: minmax(0, 1fr) minmax(315px, .85fr); } }
+    @media (max-width: 710px) {
+      .shell { width: calc(100% - 34px); }
+      main { padding-top: 25px; }
+      .topbar .shell { min-height: 54px; }
+      .intro { flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
+      .workspace { grid-template-columns: minmax(0, 1fr); gap: 25px; }
+      .workspace:has(#finish-controls:not([hidden])) .room-section { position: sticky; top: 0; z-index: 2; padding: 4px 0 7px; background: #f8f6f0; }
+      .workspace:has(#finish-controls:not([hidden])) .plan-room { width: min(100%, 220px); }
+      .workspace:has(#finish-controls:not([hidden])) .scene-3d { height: 270px; }
+      .workspace:has(#finish-controls:not([hidden])) .plan-caption > span { display: none; }
+      .finish-tabs { position: sticky; top: 337px; z-index: 1; background: #f8f6f0; }
+      .workspace:has(#orbit-view:not([hidden])) .finish-tabs { top: 315px; }
+      .finish-option { scroll-margin-top: 380px; }
+      .panel { scroll-margin-top: 330px; }
+      .marker { min-height: 32px; padding: 4px 8px 4px 4px; gap: 4px; font-size: 11px; }
+      .marker > span { width: 22px; font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+<header class="topbar"><div class="shell"><div class="brand"><span class="brand-mark" aria-hidden="true"></span>RoomMate</div><p class="project-label">Демонстрационный проект</p></div></header>
+<main class="shell">
+  <div class="intro">
+    <div><h1>Спальня</h1><p class="room-details">14 м² · 340 × 410 см · Москва</p></div>
+    <div class="scene-switch" role="group" aria-label="Вид комнаты">
+      <button type="button" data-view="plan" aria-controls="plan-view" aria-pressed="true">План</button>
+      <button type="button" data-view="orbit" aria-controls="orbit-view" aria-pressed="false">3D</button>
+      <button type="button" data-view="interior" aria-controls="interior-view" aria-pressed="false">Интерьер</button>
+    </div>
+  </div>
+  <div class="workspace">
+    <section class="room-section" aria-label="Интерьер и планировка">
+      <figure id="interior-view" hidden>
+        <div class="scene">
+          <img src="interior-bedroom.webp" alt="Концепт спальни с постелью из льна, деревянной тумбой и тёплым боковым светом" fetchpriority="high">
+          <button type="button" class="marker marker-bed" data-slot="bed"><span aria-hidden="true">+</span>Кровать</button>
+          <button type="button" class="marker marker-table" data-slot="table"><span aria-hidden="true">+</span>Тумба</button>
+        </div>
+        <figcaption>Концепт интерьера. Выбранные позиции и точные размеры — в комплектации и на плане.</figcaption>
+      </figure>
+      <figure id="plan-view">
+        <div class="plan-panel">
+          <div class="plan-room">
+            <img class="plan-architecture" src="interior-plan-room.webp" width="956" height="1195" alt="Спальня сверху, окно на верхней стене, вход на противоположной">
+            <img class="architecture-finish wall-finish wall-left" src="interior-plan-room.webp" alt="">
+            <img class="architecture-finish wall-finish wall-right" src="interior-plan-room.webp" alt="">
+            <img class="architecture-finish window-finish" src="interior-plan-room.webp" alt="">
+            <img class="architecture-finish door-finish" src="interior-plan-room.webp" alt="">
+            <div class="plan" id="room-plan">
+              <img class="floor-finish" id="floor-finish" alt="" hidden>
+              <img class="plan-rug" src="interior-plan-rug.webp" alt="">
+              <button type="button" class="piece" id="bed-shape" data-slot="bed" aria-label="Кровать" title="Кровать">
+                <img src="interior-plan-bed.webp" alt="">
+                <span class="piece-size" aria-hidden="true"></span>
+                <span class="piece-pin" aria-hidden="true">+</span>
+              </button>
+              <button type="button" class="piece table" id="table-shape" data-slot="table" aria-label="Тумба" title="Тумба">
+                <img src="interior-plan-nightstand.webp" alt="">
+                <span class="piece-size" aria-hidden="true"></span>
+                <span class="piece-pin" aria-hidden="true">+</span>
+              </button>
+              <button type="button" class="piece table" data-slot="tableLeft" aria-label="Левая тумба" title="Левая тумба">
+                <img src="interior-plan-nightstand.webp" alt="">
+                <span class="piece-size" aria-hidden="true"></span><span class="piece-pin" aria-hidden="true">+</span>
+              </button>
+              <button type="button" class="piece plan-chair" data-slot="chair" aria-label="Кресло" title="Кресло">
+                <img src="interior-plan-chair.webp" alt="">
+                <span class="piece-size" aria-hidden="true"></span><span class="piece-pin" aria-hidden="true">+</span>
+              </button>
+              <button type="button" class="piece plan-lamp" data-slot="lamp" aria-label="Торшер" title="Торшер">
+                <img src="interior-plan-lamp.webp" alt="">
+                <span class="piece-size" aria-hidden="true"></span><span class="piece-pin" aria-hidden="true">+</span>
+              </button>
+              <button type="button" class="piece plan-tv" data-slot="tv" aria-label="Телевизор" title="Телевизор">
+                <img src="interior-plan-tv.webp" alt="">
+                <span class="piece-size" aria-hidden="true"></span><span class="piece-pin" aria-hidden="true">+</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <figcaption class="plan-caption">
+          <span>Размеры по артикулам. Внешний вид мебели показан условно.</span>
+          <div class="plan-actions">
+            <button id="edit-finishes" type="button" aria-controls="finish-controls">Изменить отделку</button>
+            <button id="measurements" type="button" aria-pressed="false" aria-controls="room-plan">Показать размеры</button>
+            <button type="button" data-light-switch aria-pressed="true">Свет</button>
+          </div>
+        </figcaption>
+      </figure>
+      <figure id="orbit-view" hidden>
+        <div class="scene-3d" id="scene-3d">
+          <p class="scene-3d-status" id="scene-3d-status" role="status">Загружаю 3D-комнату…</p>
+          <div class="orbit-controls" id="orbit-controls" hidden role="group" aria-label="Управление 3D-видом">
+            <button type="button" data-orbit="left" aria-label="Повернуть влево">↶</button>
+            <button type="button" data-orbit="perspective">Под углом</button>
+            <button type="button" data-orbit="top">Сверху</button>
+            <button type="button" data-orbit="right" aria-label="Повернуть вправо">↷</button>
+            <button type="button" data-light-switch aria-pressed="true">Свет</button>
+          </div>
+        </div>
+        <figcaption>Перетащите сцену для вращения. Нажмите на предмет, чтобы открыть его варианты.</figcaption>
+      </figure>
+    </section>
+    <section class="panel" aria-labelledby="selection-title">
+      <div class="panel-head"><h2 id="selection-title">Комплектация</h2></div>
+      <div class="editor-switch" role="group" aria-label="Что изменить">
+        <button type="button" data-editor="furniture" aria-controls="furniture-controls" aria-pressed="true">Мебель</button>
+        <button type="button" data-editor="finish" aria-controls="finish-controls" aria-pressed="false">Отделка</button>
+      </div>
+      <div id="furniture-controls">
+        <div class="summary" aria-live="polite"><div><strong id="total"></strong><span id="budget-label"></span></div><p id="budget-status"></p></div>
+        <div class="tabs item-tabs" id="item-tabs" role="group" aria-label="Предмет интерьера"></div>
+        <div class="options" id="options"></div>
+        <div class="checks" role="status" id="checks"></div>
+        <h3>Спецификация</h3>
+        <ul id="specification" class="spec"></ul>
+        <div class="actions"><button type="button" class="primary" id="approve">Согласовать комплект</button><button type="button" id="download">Скачать SKU ↓</button></div>
+        <p class="note" id="approval" aria-live="polite"></p>
+        <p class="note">Цены из карточек магазинов. Наличие и итоговую цену по адресу уточняйте у продавца.</p>
+      </div>
+      <div id="finish-controls" hidden>
+        <div class="tabs finish-tabs" id="finish-tabs" role="group" aria-label="Поверхность или элемент"></div>
+        <div class="options" id="finish-options"></div>
+        <dl class="finish-selection" id="finish-selection" aria-label="Выбранная отделка"></dl>
+        <button type="button" class="reset-finishes" id="reset-finishes">Сбросить отделку</button>
+        <p class="note">Отделка для визуального подбора. В смету и ведомость входят выбранные товары.</p>
+      </div>
+    </section>
+  </div>
+</main>
+<script src="roommate-catalog.js"></script>
+<script>
+  const products = window.RoomMateCatalog;
+  const room = { width: 340, depth: 410, budget: 90000, bedX: 137, bedY: 25, tableGap: 2 };
+  const slots = {
+    bed: { label: 'Кровать', ids: ['helen', 'lorena', 'kapriz', 'tokio'] },
+    tableLeft: { label: 'Левая тумба', ids: ['narrow', 'wide', 'tokioTable', 'country', null], empty: 'Без левой тумбы' },
+    table: { label: 'Правая тумба', ids: ['narrow', 'wide', 'tokioTable', 'country', null], empty: 'Без правой тумбы' },
+    chair: { label: 'Кресло', ids: ['gaudi', 'gaudiHoney', 'gaudiBrown', 'gaudiGrey', null], empty: 'Без кресла' },
+    tv: { label: 'Телевизор', ids: ['tv32', 'tv40', 'tv43', 'tv50', null], empty: 'Без телевизора' },
+    lamp: { label: 'Свет', ids: ['azurite', 'tho', 'lyunken', 'thoShelf', null], empty: 'Без торшера' },
+  };
+  const state = {
+    slot: 'bed', bed: 'helen', table: 'narrow', tableLeft: 'tokioTable',
+    chair: 'gaudi', tv: 'tv32', lamp: 'azurite', approved: false, lightOn: true, view: 'plan',
+  };
+  const finishes = {
+    floor: { label: 'Пол', options: {
+      walnut: { label: 'Тёплый орех', color: '#886039', sample: 'interior-plan-floor-walnut.webp' },
+      oak: { label: 'Светлый дуб ёлочкой', color: '#e1cbb2', image: 'interior-plan-floor-oak.webp' },
+      stone: { label: 'Травертин', color: '#c6b49d', image: 'interior-plan-floor-stone.webp' },
+      smoked: { label: 'Тёмная доска', color: '#69472f', image: 'interior-plan-floor-walnut.webp' }
+    }},
+    walls: { label: 'Стены', options: {
+      lime: { label: 'Тёплая штукатурка', color: '#ccbb9c' },
+      chalk: { label: 'Молочные', color: '#ece7dc' },
+      sage: { label: 'Шалфейные', color: '#a9ae91' }
+    }},
+    rug: { label: 'Ковёр', options: {
+      jute: { label: 'Песочный джут', color: '#c6aa7e', sample: 'interior-plan-rug.webp' },
+      grey: { label: 'Серый джут', color: '#a59f95' },
+      none: { label: 'Без ковра', color: '#f8f6f0' }
+    }},
+    door: { label: 'Дверь', options: {
+      oak: { label: 'Натуральный дуб', color: '#b28b60' },
+      walnut: { label: 'Тёмное дерево', color: '#6b4c34' },
+      chalk: { label: 'Молочная', color: '#e9e0d2' }
+    }},
+    window: { label: 'Окно', options: {
+      oak: { label: 'Деревянная рама', color: '#8f673e' },
+      chalk: { label: 'Светлая рама', color: '#e5ddce' },
+      graphite: { label: 'Графитовая рама', color: '#57534b' }
+    }}
+  };
+  const finishStorageKey = 'roommate-bedroom-finishes-v1';
+  const defaultFinishes = Object.fromEntries(Object.entries(finishes).map(([key, { options }]) => [key, Object.keys(options)[0]]));
+  let selectedFinishes = loadFinishes();
+  let finishSlot = 'floor';
+  const elementIds = ['total', 'budget-label', 'budget-status', 'options', 'checks', 'specification', 'approve', 'download', 'approval', 'item-tabs', 'room-plan', 'floor-finish', 'finish-controls', 'finish-tabs', 'finish-options', 'finish-selection', 'reset-finishes', 'edit-finishes', 'measurements', 'scene-3d', 'scene-3d-status', 'orbit-controls'];
+  const elements = Object.fromEntries(elementIds.map(id => [id, document.getElementById(id)]));
+  const planRoom = document.querySelector('.plan-room');
+  const count = new Intl.NumberFormat('ru-RU');
+  let scene3D;
+  let sceneLoading;
+  const rub = value => `${count.format(value)} ₽`;
+  const size = product => `${count.format(product.width)} × ${count.format(product.depth)}${product.height ? ` × ${count.format(product.height)}` : ''} см`;
+
+  function loadFinishes() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(finishStorageKey) || '{}');
+      return Object.fromEntries(Object.entries(defaultFinishes).map(([key, fallback]) => {
+        const value = saved?.[key];
+        return [key, Object.hasOwn(finishes[key].options, value) ? value : fallback];
+      }));
+    } catch {
+      return { ...defaultFinishes };
+    }
+  }
+
+  function saveFinishes() {
+    try {
+      localStorage.setItem(finishStorageKey, JSON.stringify(selectedFinishes));
+    } catch {
+      // The finishes still work in previews that block local storage.
+    }
+  }
+
+  function renderFinishes() {
+    Object.assign(planRoom.dataset, selectedFinishes);
+    const floorImage = finishes.floor.options[selectedFinishes.floor].image;
+    const floor = elements['floor-finish'];
+    floor.hidden = !floorImage;
+    if (floorImage && floor.getAttribute('src') !== floorImage) floor.src = floorImage;
+    planRoom.querySelector('.plan-rug').hidden = selectedFinishes.rug === 'none';
+    elements['finish-tabs'].querySelectorAll('button').forEach(button => {
+      button.setAttribute('aria-pressed', String(button.dataset.finishSlot === finishSlot));
+    });
+    elements['finish-options'].replaceChildren(...Object.entries(finishes[finishSlot].options).map(([id, option]) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'finish-option';
+      button.setAttribute('aria-pressed', String(selectedFinishes[finishSlot] === id));
+      const swatch = document.createElement('span');
+      swatch.className = 'finish-swatch';
+      swatch.style.backgroundColor = option.color;
+      const sample = option.sample || option.image;
+      if (sample) swatch.style.backgroundImage = `url(${sample})`;
+      if (id === 'smoked') swatch.style.filter = 'saturate(.72) brightness(.66)';
+      button.append(swatch, option.label);
+      button.addEventListener('click', () => {
+        if (selectedFinishes[finishSlot] === id) return;
+        selectedFinishes[finishSlot] = id;
+        saveFinishes();
+        renderFinishes();
+        elements['finish-options'].querySelector('[aria-pressed="true"]').focus({ preventScroll: true });
+      });
+      return button;
+    }));
+    elements['finish-selection'].replaceChildren(...Object.entries(finishes).map(([key, { label, options }]) => {
+      const row = document.createElement('div');
+      const name = document.createElement('dt');
+      const value = document.createElement('dd');
+      name.textContent = label;
+      value.textContent = options[selectedFinishes[key]].label;
+      row.append(name, value);
+      return row;
+    }));
+    elements['reset-finishes'].disabled = Object.entries(defaultFinishes).every(([key, value]) => selectedFinishes[key] === value);
+    if (state.view === 'orbit') syncScene();
+  }
+
+  function evaluateSelection() {
+    const bed = products[state.bed];
+    const table = products[state.table];
+    const tableLeft = products[state.tableLeft];
+    const chair = products[state.chair];
+    const lamp = products[state.lamp];
+    const tv = products[state.tv];
+    const tableX = room.bedX + bed.width + room.tableGap;
+    const limit = room.width - tableX;
+    const items = {
+      bed: { ...bed, x: room.bedX, z: room.bedY },
+      table: table && { ...table, x: tableX, z: room.bedY + 7 },
+      tableLeft: tableLeft && { ...tableLeft, x: room.bedX - room.tableGap - tableLeft.width, z: room.bedY + 7 },
+      chair: chair && { ...chair, x: 31, z: 255 },
+      lamp: lamp && { ...lamp, x: 19, z: 176 },
+      tv: tv && { ...tv, x: room.bedX + (bed.width - tv.width) / 2, z: room.depth - tv.depth - 3 },
+    };
+    const lineItems = new Map();
+    for (const product of [bed, products[bed.base], products.capri, tableLeft, table, chair, lamp, tv].filter(Boolean)) {
+      const existing = lineItems.get(product.sku);
+      lineItems.set(product.sku, { ...product, quantity: (existing?.quantity || 0) + 1 });
+    }
+    const order = [...lineItems.values()];
+    const total = order.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+    const unpriced = order.some(item => item.price === null);
+    return { bed, table, items, limit, order, total, unpriced, fits: !table || table.width <= limit, withinBudget: total <= room.budget };
+  }
+
+  function syncScene(settings = evaluateSelection()) {
+    planRoom.dataset.lightOn = String(state.lightOn);
+    document.querySelectorAll('[data-light-switch]').forEach(button => {
+      button.setAttribute('aria-pressed', String(state.lightOn));
+      button.disabled = !settings.items.lamp;
+    });
+    if (state.view === 'orbit') {
+      scene3D?.update({ room, items: settings.items, finishes: selectedFinishes, lightOn: state.lightOn });
+    }
+  }
+
+  function place(element, left, top, width, depth) {
+    element.style.left = `${100 * left / room.width}%`;
+    element.style.top = `${100 * top / room.depth}%`;
+    element.style.width = `${100 * width / room.width}%`;
+    element.style.height = `${100 * depth / room.depth}%`;
+    element.querySelector('.piece-size').dataset.size = `${count.format(width)} × ${count.format(depth)} см`;
+  }
+
+  function render() {
+    const selection = evaluateSelection();
+    document.querySelectorAll('.plan .piece').forEach(shape => {
+      const product = selection.items[shape.dataset.slot];
+      shape.hidden = !product;
+      if (!product) return;
+      const image = shape.querySelector('img');
+      if (product.planImage && image.getAttribute('src') !== product.planImage) image.src = product.planImage;
+      image.style.setProperty('--surface-filter', product.planFilter || 'brightness(1)');
+      place(shape, product.x, product.z, product.width, product.depth);
+      if (shape.dataset.slot === 'table') {
+        shape.style.setProperty('--wall-overlap', `${100 * Math.max(0, product.width - selection.limit) / product.width}%`);
+        shape.classList.toggle('is-over', !selection.fits);
+      }
+    });
+    syncScene(selection);
+    document.querySelectorAll('[data-slot]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.slot === state.slot)));
+    elements.total.textContent = `${selection.unpriced ? 'От ' : ''}${rub(selection.total)}`;
+    elements['budget-status'].className = selection.withinBudget && !selection.unpriced ? 'ok' : 'warning';
+    elements['budget-status'].textContent = selection.unpriced ? 'Есть позиции без цены' : selection.withinBudget ? `Осталось ${rub(room.budget - selection.total)}` : `Выше бюджета на ${rub(selection.total - room.budget)}`;
+    const slot = slots[state.slot];
+    elements.options.replaceChildren(...slot.ids.map(id => {
+      const product = products[id];
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'option';
+      button.setAttribute('aria-pressed', String(state[state.slot] === id));
+      if (product) {
+        const price = product.price === null ? 'Уточнить' : rub(product.price);
+        button.innerHTML = `<span><b>${product.title}</b><small>SKU ${product.sku} · ${size(product)}</small></span><span>${price}</span>`;
+      } else {
+        const label = document.createElement('span');
+        label.textContent = slot.empty;
+        button.append(label);
+      }
+      button.addEventListener('click', () => {
+        if (state[state.slot] === id) return;
+        state[state.slot] = id;
+        state.approved = false;
+        if (state.view === 'interior') selectView('plan');
+        render();
+        elements.options.querySelector('[aria-pressed="true"]').focus();
+      });
+      return button;
+    }));
+    const tableCheck = selection.table
+      ? `<p class="${selection.fits ? 'ok' : 'warning'}">Правая тумба ${count.format(selection.table.width)} см при доступных ${count.format(selection.limit)} см${selection.fits ? '.' : ' — нужна замена.'}</p>`
+      : '';
+    elements.checks.innerHTML = `<p>${selection.bed.base ? 'Основание добавлено отдельным SKU, цена учтена.' : 'Основание входит в комплект кровати.'}</p>${tableCheck}`;
+    elements.specification.replaceChildren(...selection.order.map(product => {
+      const line = document.createElement('li');
+      line.className = 'line';
+      const price = product.price === null ? 'Уточнить цену' : rub(product.price * product.quantity);
+      line.innerHTML = `<div><a href="${product.url}" target="_blank" rel="noopener noreferrer" aria-label="${product.title} — открыть у продавца">${product.title} ↗</a><small>SKU ${product.sku} · ${size(product)} · ${product.quantity} шт.</small></div><strong>${price}</strong>`;
+      return line;
+    }));
+    elements.approve.disabled = state.approved || !selection.fits || !selection.withinBudget || selection.unpriced;
+    elements.download.disabled = !state.approved;
+    elements.approval.textContent = state.approved ? 'Подборка согласована. При замене потребуется новое согласование.' : 'Для согласования нужны цены всех позиций. Предметы должны помещаться в комнате и укладываться в бюджет.';
+  }
+
+  const viewButtons = document.querySelectorAll('[data-view]');
+  const editorButtons = document.querySelectorAll('[data-editor]');
+
+  function activatePanel(buttons, key, value) {
+    buttons.forEach(button => {
+      const active = button.dataset[key] === value;
+      button.setAttribute('aria-pressed', String(active));
+      document.getElementById(button.getAttribute('aria-controls')).hidden = !active;
+    });
+  }
+
+  function selectView(view) {
+    state.view = view;
+    activatePanel(viewButtons, 'view', view);
+    if (view === 'interior' && !elements['finish-controls'].hidden) selectEditor('furniture');
+    if (view === 'orbit') openScene();
+  }
+
+  function selectEditor(editor) {
+    activatePanel(editorButtons, 'editor', editor);
+    elements['edit-finishes'].hidden = editor === 'finish';
+    if (editor === 'finish' && state.view === 'interior') selectView('plan');
+  }
+
+  function openScene() {
+    if (scene3D) {
+      syncScene();
+      return;
+    }
+    if (sceneLoading) return;
+    const script = document.createElement('script');
+    script.src = 'roommate-3d.js';
+    sceneLoading = true;
+    const status = elements['scene-3d-status'];
+    const showError = () => {
+      status.textContent = '3D не открылся. Редактор доступен во вкладке «План».';
+      script.remove();
+      sceneLoading = false;
+    };
+    script.addEventListener('error', showError, { once: true });
+    script.addEventListener('load', () => {
+      try {
+        scene3D = window.RoomMate3D.create(elements['scene-3d'], selectSlot);
+        syncScene();
+        status.hidden = true;
+        elements['orbit-controls'].hidden = false;
+      } catch {
+        showError();
+      }
+    }, { once: true });
+    document.body.append(script);
+  }
+
+  document.querySelectorAll('[data-orbit]').forEach(button => button.addEventListener('click', () => {
+    const action = button.dataset.orbit;
+    if (action === 'left' || action === 'right') scene3D.rotate(action === 'left' ? -Math.PI / 5 : Math.PI / 5);
+    else scene3D.view(action);
+  }));
+  document.querySelectorAll('[data-light-switch]').forEach(button => button.addEventListener('click', () => {
+    state.lightOn = !state.lightOn;
+    syncScene();
+  }));
+  viewButtons.forEach(button => button.addEventListener('click', () => selectView(button.dataset.view)));
+  editorButtons.forEach(button => button.addEventListener('click', () => selectEditor(button.dataset.editor)));
+  elements['edit-finishes'].addEventListener('click', () => {
+    selectEditor('finish');
+    const activeTab = elements['finish-tabs'].querySelector('[aria-pressed="true"]');
+    if (window.matchMedia('(max-width: 710px)').matches) document.querySelector('.panel').scrollIntoView();
+    activeTab.focus({ preventScroll: true });
+  });
+  Object.entries(finishes).forEach(([key, { label }]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.finishSlot = key;
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      finishSlot = key;
+      renderFinishes();
+    });
+    elements['finish-tabs'].append(button);
+  });
+  elements['reset-finishes'].addEventListener('click', () => {
+    selectedFinishes = { ...defaultFinishes };
+    saveFinishes();
+    renderFinishes();
+    elements['finish-options'].querySelector('[aria-pressed="true"]').focus();
+  });
+  const measurements = elements.measurements;
+  measurements.addEventListener('click', () => {
+    const active = measurements.getAttribute('aria-pressed') === 'false';
+    measurements.setAttribute('aria-pressed', String(active));
+    measurements.textContent = active ? 'Скрыть размеры' : 'Показать размеры';
+    elements['room-plan'].dataset.measurements = String(active);
+  });
+  function selectSlot(slot) {
+    selectEditor('furniture');
+    state.slot = slot;
+    render();
+  }
+
+  Object.entries(slots).forEach(([slot, { label }]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.slot = slot;
+    button.textContent = label;
+    elements['item-tabs'].append(button);
+  });
+  document.querySelectorAll('[data-slot]').forEach(button => button.addEventListener('click', () => selectSlot(button.dataset.slot)));
+  elements['budget-label'].textContent = `Без доставки · бюджет ${rub(room.budget)}`;
+  elements.approve.addEventListener('click', () => {
+    const selection = evaluateSelection();
+    if (!selection.fits || !selection.withinBudget || selection.unpriced) return;
+    state.approved = true;
+    render();
+    elements.download.focus();
+  });
+  elements.download.addEventListener('click', () => {
+    if (!state.approved) return;
+    const selection = evaluateSelection();
+    const rows = [
+      ['Товар', 'SKU', 'Ширина, см', 'Глубина, см', 'Высота, см', 'Шт.', 'Цена за шт., ₽', 'Карточка'],
+      ...selection.order.map(p => [p.title, p.sku, p.width, p.depth, p.height ?? '', p.quantity, p.price, p.url]),
+      ['Итого без доставки', '', '', '', '', '', selection.total, '']
+    ];
+    const csv = rows.map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(';')).join('\r\n');
+    const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'bedroom-sku-demo.csv';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  render();
+  renderFinishes();
+</script>
+</body>
+</html>
