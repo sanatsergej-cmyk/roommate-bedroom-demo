@@ -109,6 +109,27 @@
     .orbit-controls button[aria-pressed=true] { background: #302820; color: #fffaf2; }
     .panel { padding: 0 0 0 clamp(0px, .25vw, 4px); }
     .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+    .review-card { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); }
+    .review-card .summary { margin: 0 0 10px; }
+    .review-card .actions { margin: 0 0 6px; }
+    .review-card .primary { background: var(--green); border-color: var(--green); }
+    .revision-label { color: var(--muted); white-space: nowrap; font-size: 12px; }
+    .edit-form { display: grid; gap: 6px; margin: 0 0 12px; }
+    .edit-form label { font-size: 12px; font-weight: 650; }
+    .input-row { display: flex; gap: 6px; }
+    .edit-form input, .edit-form textarea { min-width: 0; width: 100%; padding: 9px 10px; border: 1px solid #cfc5b6; border-radius: 5px; background: var(--paper); color: inherit; font: inherit; font-size: 13px; }
+    .edit-form textarea { min-height: 76px; resize: vertical; line-height: 1.5; }
+    .form-button { flex: none; padding: 8px 10px; border: 1px solid #b5aa9a; border-radius: 5px; background: var(--paper); font-size: 12px; font-weight: 650; }
+    .form-button.action { justify-self: start; color: #fffcf3; background: #302820; border-color: #302820; }
+    .status-message { font-size: 12px; line-height: 1.45; color: var(--muted); }
+    .status-message:empty { display: none; }
+    .catalog-results, .history-list { list-style: none; margin: 0; padding: 0; }
+    .catalog-results:not(:empty) { margin-bottom: 12px; }
+    .catalog-results li, .history-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 12px; }
+    .catalog-results small, .history-list small { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .catalog-results button, .history-list button { border: 0; padding: 4px 0; background: transparent; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; font-size: 12px; }
+    .catalog-actions { display: flex; gap: 8px; }
+    .project-history h3 { margin-bottom: 6px; }
     .editor-switch { display: flex; gap: 3px; padding: 3px; border-radius: 5px; margin: 12px 0 13px; background: #ebe6dc; }
     .editor-switch button { flex: 1; border: 1px solid transparent; border-radius: 4px; padding: 7px 12px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; }
     .editor-switch button[aria-pressed=true] { border-color: #e4dcd0; background: var(--paper); color: #24231e; }
@@ -147,6 +168,7 @@
     .line { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; align-items: baseline; border-top: 1px solid var(--line); padding: 9px 0; font-size: 13px; }
     .line a { text-decoration-color: #aaa296; text-decoration-thickness: 1px; }
     .line a:hover { color: var(--accent); text-decoration-color: currentColor; }
+    .copy-sku { border: 0; padding: 0; background: transparent; color: var(--muted); text-decoration: underline dotted; text-underline-offset: 2px; font-size: inherit; }
     .actions { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0 9px; }
     .actions button { flex: 1 1 max-content; border: 1px solid #b5aa9a; border-radius: 4px; padding: 11px 12px; background: transparent; font-size: 12px; font-weight: 650; }
     .actions .primary { color: #fffcf3; background: #302820; border-color: #302820; }
@@ -258,21 +280,48 @@
       </figure>
     </section>
     <section class="panel" aria-labelledby="selection-title">
-      <div class="panel-head"><h2 id="selection-title">Комплектация</h2></div>
+      <div class="panel-head"><h2 id="selection-title">Комплектация</h2><span class="revision-label" id="revision-label"></span></div>
+      <div class="review-card">
+        <div class="summary" aria-live="polite"><div><strong id="total"></strong><span id="budget-label"></span></div><p id="budget-status"></p></div>
+        <div class="actions"><button type="button" class="primary" id="approve">Согласовать комплект</button><button type="button" id="download">Скачать SKU ↓</button></div>
+        <p class="note" id="approval" aria-live="polite"></p>
+      </div>
       <div class="editor-switch" role="group" aria-label="Что изменить">
         <button type="button" data-editor="furniture" aria-controls="furniture-controls" aria-pressed="true">Мебель</button>
         <button type="button" data-editor="finish" aria-controls="finish-controls" aria-pressed="false">Отделка</button>
+        <button type="button" data-editor="revision" aria-controls="revision-controls" aria-pressed="false">Правки</button>
       </div>
       <div id="furniture-controls">
-        <div class="summary" aria-live="polite"><div><strong id="total"></strong><span id="budget-label"></span></div><p id="budget-status"></p></div>
+        <form class="edit-form" id="catalog-form" role="search" aria-label="Каталог демо">
+          <label for="catalog-query">Поиск по каталогу демо</label>
+          <div class="input-row"><input id="catalog-query" type="search" maxlength="80" placeholder="Артикул или название"><button class="form-button" type="submit">Найти</button></div>
+          <p class="status-message" id="catalog-status" role="status"></p>
+        </form>
+        <ul class="catalog-results" id="catalog-results" aria-label="Найденные товары"></ul>
+        <form class="edit-form" id="budget-form">
+          <label for="budget-input">Бюджет, ₽</label>
+          <div class="input-row"><input id="budget-input" type="number" inputmode="numeric" min="1" max="10000000" required><button class="form-button" type="submit">Подобрать</button></div>
+          <p class="status-message" id="budget-feedback" role="status"></p>
+        </form>
         <div class="tabs item-tabs" id="item-tabs" role="group" aria-label="Предмет интерьера"></div>
         <div class="options" id="options"></div>
         <div class="checks" role="status" id="checks"></div>
         <h3>Спецификация</h3>
         <ul id="specification" class="spec"></ul>
-        <div class="actions"><button type="button" class="primary" id="approve">Согласовать комплект</button><button type="button" id="download">Скачать SKU ↓</button></div>
-        <p class="note" id="approval" aria-live="polite"></p>
         <p class="note">Цены из карточек магазинов. Наличие и итоговую цену по адресу уточняйте у продавца.</p>
+      </div>
+      <div id="revision-controls" hidden>
+        <form class="edit-form" id="revision-form">
+          <label for="revision-query">Что изменить в комнате?</label>
+          <textarea id="revision-query" required maxlength="280" placeholder="Светлый дуб ёлочкой, убери кресло, бюджет до 65 000 ₽"></textarea>
+          <button class="form-button action" type="submit">Применить правки</button>
+          <p class="note">Помощник понимает названия, артикулы и команды из примера. Изменения сохраняются в истории этого браузера.</p>
+          <p class="status-message" id="revision-feedback" role="status"></p>
+        </form>
+        <section class="project-history" aria-labelledby="history-title">
+          <h3 id="history-title">История версий</h3>
+          <ol class="history-list" id="history-list"></ol>
+        </section>
       </div>
       <div id="finish-controls" hidden>
         <div class="tabs finish-tabs" id="finish-tabs" role="group" aria-label="Поверхность или элемент"></div>
@@ -285,6 +334,7 @@
   </div>
 </main>
 <script src="roommate-catalog.js"></script>
+<script src="roommate-revisions.js"></script>
 <script>
   const products = window.RoomMateCatalog;
   const room = { width: 340, depth: 410, budget: 90000, bedX: 137, bedY: 25, tableGap: 2 };
@@ -298,8 +348,10 @@
   };
   const state = {
     slot: 'bed', bed: 'helen', table: 'narrow', tableLeft: 'tokioTable',
-    chair: 'gaudi', tv: 'tv32', lamp: 'azurite', approved: false, lightOn: true, view: 'plan',
+    chair: 'gaudi', tv: 'tv32', lamp: 'azurite', budget: room.budget, approved: false, lightOn: true, view: 'plan',
   };
+  const initialState = { ...state };
+  const editableSlots = Object.keys(slots);
   const finishes = {
     floor: { label: 'Пол', options: {
       walnut: { label: 'Тёплый орех', color: '#886039', sample: 'interior-plan-floor-walnut.webp' },
@@ -329,13 +381,16 @@
     }}
   };
   const finishStorageKey = 'roommate-bedroom-finishes-v1';
+  const projectStorageKey = 'roommate-bedroom-project-v1';
   const defaultFinishes = Object.fromEntries(Object.entries(finishes).map(([key, { options }]) => [key, Object.keys(options)[0]]));
   let selectedFinishes = loadFinishes();
   let finishSlot = 'floor';
-  const elementIds = ['total', 'budget-label', 'budget-status', 'options', 'checks', 'specification', 'approve', 'download', 'approval', 'item-tabs', 'room-plan', 'floor-finish', 'finish-controls', 'finish-tabs', 'finish-options', 'finish-selection', 'reset-finishes', 'edit-finishes', 'measurements', 'scene-3d', 'scene-3d-status', 'orbit-controls'];
+  const elementIds = ['total', 'budget-label', 'budget-status', 'options', 'checks', 'specification', 'approve', 'download', 'approval', 'item-tabs', 'room-plan', 'floor-finish', 'finish-controls', 'finish-tabs', 'finish-options', 'finish-selection', 'reset-finishes', 'edit-finishes', 'measurements', 'scene-3d', 'scene-3d-status', 'orbit-controls', 'revision-label', 'revision-form', 'revision-query', 'revision-feedback', 'history-list', 'budget-form', 'budget-input', 'budget-feedback', 'catalog-form', 'catalog-query', 'catalog-status', 'catalog-results'];
   const elements = Object.fromEntries(elementIds.map(id => [id, document.getElementById(id)]));
   const planRoom = document.querySelector('.plan-room');
   const count = new Intl.NumberFormat('ru-RU');
+  const versionDate = new Intl.DateTimeFormat('ru-RU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  let versions = [];
   let scene3D;
   let sceneLoading;
   const rub = value => `${count.format(value)} ₽`;
@@ -353,12 +408,74 @@
     }
   }
 
-  function saveFinishes() {
-    try {
-      localStorage.setItem(finishStorageKey, JSON.stringify(selectedFinishes));
-    } catch {
-      // The finishes still work in previews that block local storage.
+  function snapshot() {
+    return {
+      items: Object.fromEntries(editableSlots.map(key => [key, state[key]])),
+      finishes: { ...selectedFinishes }, budget: state.budget, lightOn: state.lightOn, approved: state.approved,
+    };
+  }
+
+  function restore(data) {
+    for (const key of editableSlots) {
+      state[key] = slots[key].ids.includes(data.items?.[key]) ? data.items[key] : initialState[key];
     }
+    selectedFinishes = Object.fromEntries(Object.entries(defaultFinishes).map(([key, fallback]) => {
+      const value = data.finishes?.[key];
+      return [key, Object.hasOwn(finishes[key].options, value) ? value : fallback];
+    }));
+    state.budget = Number.isInteger(data.budget) && data.budget > 0 && data.budget <= 10000000 ? data.budget : room.budget;
+    state.lightOn = data.lightOn !== false;
+    const selection = evaluateSelection();
+    state.approved = data.approved === true && selection.fits && selection.withinBudget && !selection.unpriced;
+    elements['budget-input'].value = state.budget;
+    elements['budget-feedback'].textContent = '';
+  }
+
+  function recordVersion(label) {
+    const data = snapshot();
+    const previous = versions[0];
+    if (previous && JSON.stringify(previous.data) === JSON.stringify(data)) return;
+    versions = [{ number: (previous?.number || 0) + 1, label, time: Date.now(), data }, ...versions].slice(0, 40);
+    try {
+      localStorage.setItem(projectStorageKey, JSON.stringify(versions));
+    } catch {
+      // This session still works when persistent storage is blocked.
+    }
+    renderHistory();
+  }
+
+  function renderHistory() {
+    elements['revision-label'].textContent = `Версия ${versions[0].number}`;
+    elements['history-list'].replaceChildren(...versions.map((version, index) => {
+      const line = document.createElement('li');
+      const text = document.createElement('span');
+      const details = document.createElement('small');
+      text.textContent = `${version.number}. ${version.label}`;
+      details.textContent = `${versionDate.format(version.time)} · ${rub(version.data.budget)}${version.data.approved ? ' · Согласовано' : ''}`;
+      text.append(details);
+      line.append(text);
+      if (index > 0) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Восстановить';
+        button.setAttribute('aria-label', `Восстановить версию ${version.number}`);
+        button.addEventListener('click', () => {
+          restore(version.data);
+          if (state.view === 'interior') selectView('plan');
+          updateProject(`Восстановлена версия ${version.number}`);
+          elements['revision-feedback'].textContent = `Восстановлена версия ${version.number}.`;
+          elements['revision-query'].focus({ preventScroll: true });
+        });
+        line.append(button);
+      }
+      return line;
+    }));
+  }
+
+  function updateProject(label) {
+    renderFinishes();
+    render();
+    recordVersion(label);
   }
 
   function renderFinishes() {
@@ -386,8 +503,8 @@
       button.addEventListener('click', () => {
         if (selectedFinishes[finishSlot] === id) return;
         selectedFinishes[finishSlot] = id;
-        saveFinishes();
-        renderFinishes();
+        state.approved = false;
+        updateProject(`${finishes[finishSlot].label} · ${option.label}`);
         elements['finish-options'].querySelector('[aria-pressed="true"]').focus({ preventScroll: true });
       });
       return button;
@@ -402,16 +519,15 @@
       return row;
     }));
     elements['reset-finishes'].disabled = Object.entries(defaultFinishes).every(([key, value]) => selectedFinishes[key] === value);
-    if (state.view === 'orbit') syncScene();
   }
 
-  function evaluateSelection() {
-    const bed = products[state.bed];
-    const table = products[state.table];
-    const tableLeft = products[state.tableLeft];
-    const chair = products[state.chair];
-    const lamp = products[state.lamp];
-    const tv = products[state.tv];
+  function evaluateSelection(choices = state) {
+    const bed = products[choices.bed];
+    const table = products[choices.table];
+    const tableLeft = products[choices.tableLeft];
+    const chair = products[choices.chair];
+    const lamp = products[choices.lamp];
+    const tv = products[choices.tv];
     const tableX = room.bedX + bed.width + room.tableGap;
     const limit = room.width - tableX;
     const items = {
@@ -430,7 +546,7 @@
     const order = [...lineItems.values()];
     const total = order.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
     const unpriced = order.some(item => item.price === null);
-    return { bed, table, items, limit, order, total, unpriced, fits: !table || table.width <= limit, withinBudget: total <= room.budget };
+    return { bed, table, items, limit, order, total, unpriced, fits: !table || table.width <= limit, withinBudget: total <= choices.budget };
   }
 
   function syncScene(settings = evaluateSelection()) {
@@ -470,8 +586,9 @@
     syncScene(selection);
     document.querySelectorAll('[data-slot]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.slot === state.slot)));
     elements.total.textContent = `${selection.unpriced ? 'От ' : ''}${rub(selection.total)}`;
+    elements['budget-label'].textContent = `Без доставки · бюджет ${rub(state.budget)}`;
     elements['budget-status'].className = selection.withinBudget && !selection.unpriced ? 'ok' : 'warning';
-    elements['budget-status'].textContent = selection.unpriced ? 'Есть позиции без цены' : selection.withinBudget ? `Осталось ${rub(room.budget - selection.total)}` : `Выше бюджета на ${rub(selection.total - room.budget)}`;
+    elements['budget-status'].textContent = selection.unpriced ? 'Есть позиции без цены' : selection.withinBudget ? `Осталось ${rub(state.budget - selection.total)}` : `Выше бюджета на ${rub(selection.total - state.budget)}`;
     const slot = slots[state.slot];
     elements.options.replaceChildren(...slot.ids.map(id => {
       const product = products[id];
@@ -489,10 +606,7 @@
       }
       button.addEventListener('click', () => {
         if (state[state.slot] === id) return;
-        state[state.slot] = id;
-        state.approved = false;
-        if (state.view === 'interior') selectView('plan');
-        render();
+        chooseProduct(state.slot, id);
         elements.options.querySelector('[aria-pressed="true"]').focus();
       });
       return button;
@@ -505,12 +619,14 @@
       const line = document.createElement('li');
       line.className = 'line';
       const price = product.price === null ? 'Уточнить цену' : rub(product.price * product.quantity);
-      line.innerHTML = `<div><a href="${product.url}" target="_blank" rel="noopener noreferrer" aria-label="${product.title} — открыть у продавца">${product.title} ↗</a><small>SKU ${product.sku} · ${size(product)} · ${product.quantity} шт.</small></div><strong>${price}</strong>`;
+      line.innerHTML = `<div><a href="${product.url}" target="_blank" rel="noopener noreferrer" aria-label="${product.title} — открыть у продавца">${product.title} ↗</a><small> · ${size(product)} · ${product.quantity} шт.</small></div><strong>${price}</strong>`;
+      line.querySelector('small').prepend(copySkuButton(product.sku));
       return line;
     }));
     elements.approve.disabled = state.approved || !selection.fits || !selection.withinBudget || selection.unpriced;
+    elements.approve.textContent = state.approved ? 'Комплект согласован' : 'Согласовать комплект';
     elements.download.disabled = !state.approved;
-    elements.approval.textContent = state.approved ? 'Подборка согласована. При замене потребуется новое согласование.' : 'Для согласования нужны цены всех позиций. Предметы должны помещаться в комнате и укладываться в бюджет.';
+    elements.approval.textContent = state.approved ? 'Эта версия согласована. Ведомость готова к выгрузке.' : 'Для согласования проверьте цены, бюджет и ширину правой тумбы.';
   }
 
   const viewButtons = document.querySelectorAll('[data-view]');
@@ -534,7 +650,7 @@
   function selectEditor(editor) {
     activatePanel(editorButtons, 'editor', editor);
     elements['edit-finishes'].hidden = editor === 'finish';
-    if (editor === 'finish' && state.view === 'interior') selectView('plan');
+    if (editor !== 'furniture' && state.view === 'interior') selectView('plan');
   }
 
   function openScene() {
@@ -573,7 +689,8 @@
   }));
   document.querySelectorAll('[data-light-switch]').forEach(button => button.addEventListener('click', () => {
     state.lightOn = !state.lightOn;
-    syncScene();
+    state.approved = false;
+    updateProject(state.lightOn ? 'Свет включён' : 'Свет выключен');
   }));
   viewButtons.forEach(button => button.addEventListener('click', () => selectView(button.dataset.view)));
   editorButtons.forEach(button => button.addEventListener('click', () => selectEditor(button.dataset.editor)));
@@ -596,8 +713,8 @@
   });
   elements['reset-finishes'].addEventListener('click', () => {
     selectedFinishes = { ...defaultFinishes };
-    saveFinishes();
-    renderFinishes();
+    state.approved = false;
+    updateProject('Возвращена исходная отделка');
     elements['finish-options'].querySelector('[aria-pressed="true"]').focus();
   });
   const measurements = elements.measurements;
@@ -613,6 +730,142 @@
     render();
   }
 
+  function chooseProduct(slot, id) {
+    state.slot = slot;
+    if (state[slot] === id) {
+      render();
+      return;
+    }
+    state[slot] = id;
+    state.approved = false;
+    if (state.view === 'interior') selectView('plan');
+    elements['budget-feedback'].textContent = '';
+    updateProject(`${slots[slot].label} · ${products[id]?.title || slots[slot].empty}`);
+  }
+
+  function copySkuButton(sku) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'copy-sku';
+    button.textContent = `SKU ${sku}`;
+    button.setAttribute('aria-label', `Скопировать SKU ${sku}`);
+    button.title = 'Скопировать артикул';
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(sku);
+        button.textContent = 'Скопировано';
+        setTimeout(() => { button.textContent = `SKU ${sku}`; }, 1400);
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(button);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+      }
+    });
+    return button;
+  }
+
+  elements['catalog-form'].addEventListener('submit', event => {
+    event.preventDefault();
+    const query = elements['catalog-query'].value.trim();
+    const matches = window.RoomMateRevisions.search(query, products);
+    elements['catalog-status'].textContent = !query ? 'Введите название или артикул.' : matches.length ? `Найдено ${matches.length}` : 'В каталоге демо совпадений нет.';
+    elements['catalog-results'].replaceChildren(...matches.map(([id, product]) => {
+      const row = document.createElement('li');
+      const summary = document.createElement('span');
+      const link = document.createElement('a');
+      const details = document.createElement('small');
+      link.href = product.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = `${product.title} ↗`;
+      details.append(copySkuButton(product.sku), ` · ${product.price === null ? 'Цена уточняется' : rub(product.price)}`);
+      summary.append(link, details);
+      const actions = document.createElement('div');
+      actions.className = 'catalog-actions';
+      editableSlots.filter(key => slots[key].ids.includes(id)).forEach(key => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = key === 'tableLeft' ? 'Слева' : key === 'table' ? 'Справа' : 'Выбрать';
+        button.setAttribute('aria-label', `Выбрать ${product.title} · ${slots[key].label}`);
+        button.addEventListener('click', () => {
+          chooseProduct(key, id);
+          elements.options.querySelector('[aria-pressed="true"]').focus({ preventScroll: true });
+        });
+        actions.append(button);
+      });
+      row.append(summary, actions);
+      return row;
+    }));
+  });
+
+  function budgetProposal(choices, budget, locked = new Set()) {
+    return window.RoomMateRevisions.fitBudget(choices, budget, locked, slots, evaluateSelection);
+  }
+
+  function budgetFailure(minimum) {
+    return Number.isFinite(minimum) ? `Самый недорогой совместимый набор здесь стоит ${rub(minimum)}.` : 'Для этих условий не нашлось совместимого набора с известными ценами.';
+  }
+
+  elements['budget-form'].addEventListener('submit', event => {
+    event.preventDefault();
+    const budget = elements['budget-input'].valueAsNumber;
+    if (!Number.isInteger(budget) || budget < 1 || budget > 10000000) return;
+    const proposal = budgetProposal(state, budget);
+    if (!proposal.choices) {
+      elements['budget-feedback'].textContent = budgetFailure(proposal.minimum);
+      return;
+    }
+    const changes = editableSlots.filter(key => proposal.choices[key] !== state[key]);
+    if (changes.length || budget !== state.budget) {
+      Object.assign(state, proposal.choices, { approved: false });
+      if (state.view === 'interior') selectView('plan');
+      updateProject(`Подбор на ${rub(budget)}`);
+    }
+    const detail = changes.map(key => `${slots[key].label}: ${products[state[key]]?.title || 'убрано'}`).join(' · ');
+    elements['budget-feedback'].textContent = `Комплект на ${rub(evaluateSelection().total)}. ${detail || 'Текущий комплект подходит.'}`;
+  });
+
+  elements['revision-form'].addEventListener('submit', event => {
+    event.preventDefault();
+    const text = elements['revision-query'].value.trim();
+    const feedback = elements['revision-feedback'];
+    if (!text) return;
+    const command = window.RoomMateRevisions.parse(text, { products, slots, activeSlot: state.slot });
+    if (command.unknown.length) {
+      feedback.textContent = `Уточните правку «${command.unknown[0]}». Можно указать название из каталога или артикул.`;
+      return;
+    }
+    let choices = { ...state, ...command.items };
+    if (command.budget !== undefined) {
+      const proposal = budgetProposal(choices, command.budget, new Set(Object.keys(command.items)));
+      if (!proposal.choices) {
+        feedback.textContent = budgetFailure(proposal.minimum);
+        return;
+      }
+      choices = proposal.choices;
+    }
+    const materials = { ...selectedFinishes, ...command.finishes };
+    const lightOn = command.lightOn ?? state.lightOn;
+    const changes = editableSlots.filter(key => choices[key] !== state[key]).map(key => slots[key].label);
+    Object.keys(command.finishes).forEach(key => {
+      if (materials[key] !== selectedFinishes[key]) changes.push(finishes[key].label);
+    });
+    if (choices.budget !== state.budget) changes.push('Бюджет');
+    if (lightOn !== state.lightOn) changes.push('Освещение');
+    if (!changes.length) {
+      feedback.textContent = 'Этот вариант уже открыт.';
+      return;
+    }
+    Object.assign(state, choices, { lightOn, approved: false });
+    selectedFinishes = materials;
+    elements['budget-input'].value = state.budget;
+    elements['budget-feedback'].textContent = '';
+    if (state.view === 'interior') selectView('plan');
+    updateProject(`Правки · ${changes.join(', ')}`);
+    feedback.textContent = `Сохранена версия ${versions[0].number}. Комплект на ${rub(evaluateSelection().total)}.`;
+  });
+
   Object.entries(slots).forEach(([slot, { label }]) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -621,12 +874,11 @@
     elements['item-tabs'].append(button);
   });
   document.querySelectorAll('[data-slot]').forEach(button => button.addEventListener('click', () => selectSlot(button.dataset.slot)));
-  elements['budget-label'].textContent = `Без доставки · бюджет ${rub(room.budget)}`;
   elements.approve.addEventListener('click', () => {
     const selection = evaluateSelection();
     if (!selection.fits || !selection.withinBudget || selection.unpriced) return;
     state.approved = true;
-    render();
+    updateProject('Комплект согласован');
     elements.download.focus();
   });
   elements.download.addEventListener('click', () => {
@@ -645,6 +897,19 @@
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
+  try {
+    const saved = JSON.parse(localStorage.getItem(projectStorageKey) || '[]');
+    if (Array.isArray(saved)) versions = saved.filter(entry => entry?.data && typeof entry.label === 'string' && Number.isSafeInteger(entry.number) && Number.isFinite(entry.time) && Math.abs(entry.time) < 8640000000000000).slice(0, 40);
+  } catch {
+    // Start a fresh history when storage is unavailable.
+  }
+  if (versions.length) {
+    restore(versions[0].data);
+    renderHistory();
+  } else {
+    elements['budget-input'].value = state.budget;
+    recordVersion('Исходный вариант');
+  }
   render();
   renderFinishes();
 </script>
