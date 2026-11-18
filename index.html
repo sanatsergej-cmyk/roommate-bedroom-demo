@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RoomMate · Спальня</title>
   <link rel="icon" href="data:,">
+  <link rel="prefetch" id="orbit-script" href="roommate-3d.js?v=2" as="script">
   <style>
     :root {
       color-scheme: light;
@@ -543,7 +544,7 @@
     }
     if (sceneLoading) return;
     const script = document.createElement('script');
-    script.src = 'roommate-3d.js';
+    script.src = document.getElementById('orbit-script').href;
     sceneLoading = true;
     const status = elements['scene-3d-status'];
     const showError = () => {

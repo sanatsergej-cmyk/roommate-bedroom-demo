@@ -1,9 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import walnut from './interior-plan-floor-walnut.webp';
-import oak from './interior-plan-floor-oak.webp';
-import stone from './interior-plan-floor-stone.webp';
+
+const floorImages = {
+  walnut: 'interior-plan-floor-walnut.webp',
+  oak: 'interior-plan-floor-oak.webp',
+  stone: 'interior-plan-floor-stone.webp',
+};
 
 const finishColors = {
   walls: { lime: '#e2cfaf', chalk: '#ede7da', sage: '#a8b095' },
@@ -264,18 +267,22 @@ function create(host, onSelect) {
 
   const loader = new THREE.TextureLoader();
   const textures = {};
+  const loadingTextures = new Set();
   let latest;
-  for (const [key, url] of Object.entries({ walnut, oak, stone })) {
-    loader.load(url, texture => {
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      textures[key] = texture;
-      if (latest?.finishes.floor === key || (key === 'walnut' && latest?.finishes.floor === 'smoked')) update(latest);
-    });
-  }
+  const textureKey = floor => floor === 'smoked' ? 'walnut' : floor;
 
   function update(settings) {
     latest = settings;
+    const key = textureKey(settings.finishes.floor);
+    if (window.location.protocol !== 'file:' && !textures[key] && !loadingTextures.has(key)) {
+      loadingTextures.add(key);
+      loader.load(floorImages[key], texture => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        textures[key] = texture;
+        if (textureKey(latest.finishes.floor) === key) update(latest);
+      }, undefined, () => loadingTextures.delete(key));
+    }
     [room, furnishings, ...edges].forEach(clear);
     shell(room, furnishings, edges, settings, textures);
     draw();
